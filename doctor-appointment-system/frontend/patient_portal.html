@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-blue-600">My Appointments</h1>
             <div class="flex space-x-4">
-                <a href="book_appointment.html" 
-                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                <a href="book_appointment.html"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
                     Book New Appointment
                 </a>
-                <button id="logoutBtn" 
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                <button id="logoutBtn"
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
                     Logout
                 </button>
             </div>
@@ -31,7 +33,9 @@
                 <div id="upcomingAppointments" class="space-y-4">
                     <!-- Upcoming appointments will be loaded here -->
                     <div class="text-center py-8">
-                        <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                        <div
+                            class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full">
+                        </div>
                         <p class="mt-4 text-gray-600">Loading appointments...</p>
                     </div>
                 </div>
@@ -58,10 +62,12 @@
                 <div id="cancelModalDetails"></div>
             </div>
             <div class="mt-6 flex justify-end space-x-3">
-                <button id="confirmCancelBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                <button id="confirmCancelBtn"
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                     Yes, Cancel
                 </button>
-                <button id="dontCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                <button id="dontCancelBtn"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                     No, Keep It
                 </button>
             </div>
@@ -72,49 +78,41 @@
         let currentAppointmentToCancel = null;
 
         // Load appointments when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAppointments();
-            
+        document.addEventListener('DOMContentLoaded', async function () {
+            const appointments = await fetchAppointments();
+            displayAppointments(appointments);
+
             // Set up logout button
             document.getElementById('logoutBtn').addEventListener('click', logout);
-            
+
             // Set up cancel modal buttons
             document.getElementById('closeCancelModalBtn').addEventListener('click', closeCancelModal);
             document.getElementById('dontCancelBtn').addEventListener('click', closeCancelModal);
             document.getElementById('confirmCancelBtn').addEventListener('click', confirmCancel);
         });
 
-        // Function to display appointments
-function displayAppointments(appointments) {
-    const now = new Date();
-    const upcomingContainer = document.getElementById('upcomingAppointments');
-    const pastContainer = document.getElementById('pastAppointments');
-    
-    // Clear existing content
-    upcomingContainer.innerHTML = '';
-    pastContainer.innerHTML = '';
-
-    // Debugging: Log the raw appointments data
-    console.log('Raw appointments data:', appointments);
-
-    if (!appointments || appointments.length === 0) {
-        upcomingContainer.innerHTML = `
-            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-                You don't have any appointments yet. Book one now!
-            </div>
-        `;
-        return;
-    } }
+        // Function to fetch appointments from the backend
+        async function fetchAppointments() {
+            try {
+                const response = await fetch('../backend/manage_appointments.php?action=get');
+                if (!response.ok) throw new Error('Failed to fetch appointments');
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+                return [];
+            }
+        }
 
         // Function to display appointments
         function displayAppointments(appointments) {
             const now = new Date();
             const upcomingContainer = document.getElementById('upcomingAppointments');
             const pastContainer = document.getElementById('pastAppointments');
-            
+
+
             upcomingContainer.innerHTML = '';
             pastContainer.innerHTML = '';
-            
+
             if (appointments.length === 0) {
                 upcomingContainer.innerHTML = `
                     <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
@@ -123,18 +121,18 @@ function displayAppointments(appointments) {
                 `;
                 return;
             }
-            
+
             appointments.forEach(appt => {
                 const apptDate = new Date(appt.appointment_date);
                 const isPast = apptDate < now;
                 const container = isPast ? pastContainer : upcomingContainer;
-                
-                const statusBadge = appt.status === 'completed' ? 
+
+                const statusBadge = appt.status === 'completed' ?
                     '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Completed</span>' :
-                    appt.status === 'cancelled' ? 
-                    '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Cancelled</span>' :
-                    '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Scheduled</span>';
-                
+                    appt.status === 'cancelled' ?
+                        '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Cancelled</span>' :
+                        '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Scheduled</span>';
+
                 const card = document.createElement('div');
                 card.className = 'bg-white border rounded-lg shadow-sm p-4';
                 card.innerHTML = `
@@ -156,10 +154,10 @@ function displayAppointments(appointments) {
                         ` : ''}
                     </div>
                 `;
-                
+
                 container.appendChild(card);
             });
-            
+
             if (upcomingContainer.innerHTML === '') {
                 upcomingContainer.innerHTML = `
                     <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
@@ -167,7 +165,7 @@ function displayAppointments(appointments) {
                     </div>
                 `;
             }
-            
+
             if (pastContainer.innerHTML === '') {
                 pastContainer.innerHTML = `
                     <div class="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded">
@@ -196,15 +194,15 @@ function displayAppointments(appointments) {
 
         async function confirmCancel() {
             if (!currentAppointmentToCancel) return;
-            
+
             try {
                 const response = await fetch(`../backend/manage_appointments.php?action=cancel&id=${currentAppointmentToCancel}`);
                 if (!response.ok) throw new Error('Failed to cancel appointment');
-                
+
                 const result = await response.json();
                 if (result.success) {
                     closeCancelModal();
-                    loadAppointments(); // Refresh the list
+                    displayAppointments(); // Refresh the list
                 } else {
                     alert(result.message || 'Failed to cancel appointment');
                 }
@@ -221,4 +219,5 @@ function displayAppointments(appointments) {
         }
     </script>
 </body>
+
 </html>
